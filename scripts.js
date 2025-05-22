@@ -10,28 +10,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     todos.forEach((task, index) => { // task:value of current item. index:position
+        const li=document.createElement('li')
          li.innerHTML = `
-    <div class="task-header">
-        <label>
-        
-        <input type="checkbox">
-        <span>${taskText}</span>
-        </label>
-    </div>
+            <div class="task-header">
+                <label>
+                
+                <input type="checkbox">
+                <span>${task}</span>
+                </label>
+            </div>
         `;
       taskList.appendChild(li)
     });
        
     }
-
-
-
   function addTask() {
     const taskText = taskInput.value.trim();
     if (taskText !== '') {
        const li =document.createElement("li");
        todos.push(taskText);    // add to array
-       render(todos); //render inputs  
+       render(todos);           //render updated list
       taskInput.value = '';
     }else{
         alert("Please enter the task")
