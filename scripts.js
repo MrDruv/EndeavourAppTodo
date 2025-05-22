@@ -1,15 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const taskInput = document.getElementById('taskInput');
-  const taskList = document.getElementById('taskList');
 
-    // stores todos here
-    let todos=[];
-
-    function render(todos){
+function render(todos, taskList){
         taskList.innerHTML='';
-
-
-    todos.forEach((task, index) => { // task:value of current item. index:position
+    
+todos.forEach((task) => { 
         const li=document.createElement('li')
          li.innerHTML = `
             <div class="task-header">
@@ -22,22 +15,29 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       taskList.appendChild(li)
     });
-       
-    }
-  function addTask() {
+}  
+
+  function addTask(taskInput, todos, taskList) {
     const taskText = taskInput.value.trim();
     if (taskText !== '') {
-       const li =document.createElement("li");
+       
        todos.push(taskText);    // add to array
-       render(todos);           //render updated list
-      taskInput.value = '';
+       render(todos, taskList);           //render updated list
+       taskInput.value = '';
     }else{
         alert("Please enter the task")
     }  
   }
-  
+
+document.addEventListener('DOMContentLoaded', () => {
+  const taskInput = document.getElementById('taskInput');
+  const taskList = document.getElementById('taskList');
+    // stores todos here
+    const todos=[];
   //Enter key
   taskInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') addTask();
+    if (e.key === 'Enter') {
+        addTask(taskInput,  todos,  taskList);
+    }
   });
 });
