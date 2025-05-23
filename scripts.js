@@ -3,6 +3,18 @@ const taskList = document.getElementById("taskList");
 
 // stores todos here
 const todos = [];
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, function (match) {
+    const escapeChars = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    };
+    return escapeChars[match];
+  });
+}
 
 function render(todos, taskList) {
   taskList.innerHTML = "";
@@ -13,7 +25,7 @@ function render(todos, taskList) {
             <div class="task-header">
                 <label>
                 <input type="checkbox">
-                <span>${task.text}</span>
+                <span>${escapeHTML(task.text)}</span>
                 </label>
             </div>
             <div class="task-details" style="display: none;">
