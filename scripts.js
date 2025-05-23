@@ -1,5 +1,6 @@
 const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
+
 // stores todos here
 const todos = [];
 
@@ -11,12 +12,31 @@ function render(todos, taskList) {
     li.innerHTML = `
             <div class="task-header">
                 <label>
-                
                 <input type="checkbox">
                 <span>${task.text}</span>
                 </label>
             </div>
+            <div class="task-details" style="display: none;">
+            <div class="task-meta">
+              Added on: ${new Date().toLocaleDateString()} <br />
+              <label>Due-Date</label>
+              <input id = "due-date" type="date">
+              <label>notes</label>
+              <textarea id="notesInput" placeholder="Add notes..."></textarea><br>
+            </div>
+            <button class="btn-delete" data-id="${task.id}">Delete</button>
+            </div>
         `;
+
+    li.addEventListener("click", () => {
+      const details = li.querySelector(".task-details");
+      details.style.display = "block";
+    });
+    li.addEventListener("dblclick", () => {
+      const details = li.querySelector(".task-details");
+      details.style.display = "none";
+    });
+
     taskList.appendChild(li);
   });
 }
