@@ -13,7 +13,7 @@ function render(todos, taskList) {
                 <label>
                 
                 <input type="checkbox">
-                <span>${task}</span>
+                <span>${task.text}</span>
                 </label>
             </div>
         `;
@@ -27,7 +27,12 @@ function addTask(taskInput, todos, taskList) {
     alert("Please enter the task");
     return;
   }
-  todos.push(taskText); // add to array
+
+  const newTask = {
+    id: todos.length + 1,
+    text: taskText,
+  };
+  todos.push(newTask); // add to array
   render(todos, taskList); //render updated list
   taskInput.value = "";
 }
