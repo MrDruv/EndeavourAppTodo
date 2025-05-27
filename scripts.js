@@ -32,9 +32,9 @@ function render(todos, taskList) {
             <div class="task-meta">
               Added on: ${new Date().toLocaleDateString()} <br />
               <label>Due-Date</label>
-              <input id = "due-date" type="date">
+              <input class = "due-date" type="date">
               <label>notes</label>
-              <textarea id="notesInput" placeholder="Add notes..."></textarea><br>
+              <textarea class="notesInput" placeholder="Add notes..."></textarea><br>
             </div>
             <button class="btn-delete" data-id="${task.id}">Delete</button>
             </div>
