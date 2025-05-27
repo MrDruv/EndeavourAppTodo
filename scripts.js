@@ -30,7 +30,7 @@ function render(todos, taskList) {
             </div>
             <div class="task-details" style="display: none;">
             <div class="task-meta">
-              Added on: ${new Date().toLocaleDateString()} <br />
+              Added on: ${new Date(task.createAt).toLocaleDateString()} <br />
               <label>Due-Date</label>
               <input class = "due-date" type="date">
               <label>notes</label>
@@ -63,6 +63,7 @@ function addTask(taskInput, todos, taskList) {
   const newTask = {
     id: todos.length + 1,
     text: taskText,
+    createAt: new Date()=toLocaleDateString(),
   };
   todos.push(newTask); // add to array
   render(todos, taskList); //render updated list
