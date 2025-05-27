@@ -30,11 +30,11 @@ function render(todos, taskList) {
             </div>
             <div class="task-details" style="display: none;">
             <div class="task-meta">
-              Added on: ${new Date().toLocaleDateString()} <br />
+              Added on: ${new Date(task.createAt).toLocaleDateString()} <br />
               <label>Due-Date</label>
-              <input id = "due-date" type="date">
-              <label>notes</label>
-              <textarea id="notesInput" placeholder="Add notes..."></textarea><br>
+              <input class = "due-date" type="date"><br />
+              <label>Notes</label>
+              <textarea class="notesInput" placeholder="Add notes..."></textarea><br>
             </div>
             <button class="btn-delete" data-id="${task.id}">Delete</button>
             </div>
@@ -47,6 +47,18 @@ function render(todos, taskList) {
     li.addEventListener("dblclick", () => {
       const details = li.querySelector(".task-details");
       details.style.display = "none";
+    });
+
+    const deleteBtn = li.querySelector(".btn-delete");
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const confirmed = confirm("Are you sure,want to delete?");
+      if (!confirmed) return;
+      todos.splice(
+        todos.findIndex((t) => t.id === task.id),
+        1,
+      );
+      render(todos, taskList);
     });
 
     taskList.appendChild(li);
@@ -63,6 +75,7 @@ function addTask(taskInput, todos, taskList) {
   const newTask = {
     id: todos.length + 1,
     text: taskText,
+    createAt: new Date().toISOString(),
   };
   todos.push(newTask); // add to array
   render(todos, taskList); //render updated list
