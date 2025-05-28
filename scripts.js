@@ -3,6 +3,7 @@ const taskList = document.getElementById("taskList");
 
 // stores todos here
 const todos = [];
+
 function escapeHTML(str) {
   return str.replace(/[&<>"']/g, function (match) {
     const escapeChars = {
@@ -65,28 +66,34 @@ function render(todos, taskList) {
   });
 }
 
-function addTask(taskInput, todos, taskList) {
-  const taskText = taskInput.value.trim();
-  if (taskText == "") {
+function extractInputText(input) {
+  const text = input.value.trim();
+  if (text === "") {
     alert("Please enter the task");
-    return;
+    return null;
   }
+  return text;
+}
 
+function addTask(text, state) {
   const newTask = {
-    id: todos.length + 1,
-    text: taskText,
+    id: state.length + 1,
+    text,
     createAt: new Date().toISOString(),
   };
-  todos.push(newTask); // add to array
-  render(todos, taskList); //render updated list
-  taskInput.value = "";
+  return [...state, newTask];
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  //Enter key
   taskInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      addTask(taskInput, todos, taskList);
+      const text = extractInputText(taskInput);
+      if (!text) return;
+
+      const newState = addTask(text, todos);
+      todos.splice(0, todos.length, ...newState); // mutate old state
+      render(todos, taskList);
+      taskInput.value = "";
     }
   });
 });
