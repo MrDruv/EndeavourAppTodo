@@ -2,7 +2,12 @@ const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
 
 // stores todos here
-const todos = [];
+const todos = JSON.parse(localStorage.getItem("todos")) || [];
+
+function saveTodosToStorage(state) {
+  localStorage.setItem("todos", JSON.stringify(state));
+}
+
 function escapeHTML(str) {
   return str.replace(/[&<>"']/g, function (match) {
     const escapeChars = {
@@ -28,7 +33,7 @@ function render(todos, taskList) {
                 <span>${escapeHTML(task.text)}</span>
                 </label>
             </div>
-            <div class="task-details" style="display: none;">
+            <div class="task-details">
             <div class="task-meta">
               Added on: ${new Date(task.createAt).toLocaleDateString()} <br />
               <label>Due-Date</label>
@@ -39,14 +44,35 @@ function render(todos, taskList) {
             <button class="btn-delete" data-id="${task.id}">Delete</button>
             </div>
         `;
+    const taskHeader = li.querySelector(".task-header");
+    const details = li.querySelector(".task-details");
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    const dueDateInput = li.querySelector(".due-date");
+    const notesInput = li.querySelector(".notesInput");
 
-    li.addEventListener("click", () => {
-      const details = li.querySelector(".task-details");
-      details.style.display = "block";
+    taskHeader.addEventListener("click", () => {
+      details.classList.add("show");
     });
-    li.addEventListener("dblclick", () => {
-      const details = li.querySelector(".task-details");
-      details.style.display = "none";
+    taskHeader.addEventListener("dblclick", () => {
+      details.classList.remove("show");
+    });
+
+    checkbox.checked = task.completed;
+    checkbox.addEventListener("change", () => {
+      task.completed = checkbox.checked;
+      saveTodosToStorage(todos);
+    });
+
+    dueDateInput.value = task.dueDate;
+    dueDateInput.addEventListener("change", () => {
+      task.dueDate = dueDateInput.value;
+      saveTodosToStorage(todos);
+    });
+
+    notesInput.value = task.notes;
+    notesInput.addEventListener("input", () => {
+      task.notes = notesInput.value;
+      saveTodosToStorage(todos);
     });
 
     const deleteBtn = li.querySelector(".btn-delete");
@@ -58,6 +84,7 @@ function render(todos, taskList) {
         todos.findIndex((t) => t.id === task.id),
         1,
       );
+      saveTodosToStorage(todos);
       render(todos, taskList);
     });
 
@@ -65,28 +92,39 @@ function render(todos, taskList) {
   });
 }
 
-function addTask(taskInput, todos, taskList) {
-  const taskText = taskInput.value.trim();
-  if (taskText == "") {
+function extractInputText(input) {
+  const text = input.value.trim();
+  if (text === "") {
     alert("Please enter the task");
-    return;
+    return null;
   }
+  return text;
+}
 
+function addTask(text, state) {
   const newTask = {
-    id: todos.length + 1,
-    text: taskText,
+    id: state.length + 1,
+    text,
     createAt: new Date().toISOString(),
+    completed: false,
+    dueDate: "",
+    notes: "",
   };
-  todos.push(newTask); // add to array
-  render(todos, taskList); //render updated list
-  taskInput.value = "";
+  return [...state, newTask];
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  //Enter key
   taskInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      addTask(taskInput, todos, taskList);
+      const text = extractInputText(taskInput);
+      if (!text) return;
+
+      const newState = addTask(text, todos);
+      todos.splice(0, todos.length, ...newState); // mutate old state
+      saveTodosToStorage(todos);
+      render(todos, taskList);
+      taskInput.value = "";
     }
   });
+  render(todos, taskList);
 });
