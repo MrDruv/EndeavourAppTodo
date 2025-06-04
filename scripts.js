@@ -2,7 +2,11 @@ const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
 
 // stores todos here
-const todos = [];
+const todos = JSON.parse(localStorage.getItem("todos")) || [];
+
+function saveTodosToStorage(state) {
+  localStorage.setItem("todos", JSON.stringify(state));
+}
 
 function escapeHTML(str) {
   return str.replace(/[&<>"']/g, function (match) {
@@ -56,16 +60,19 @@ function render(todos, taskList) {
     checkbox.checked = task.completed;
     checkbox.addEventListener("change", () => {
       task.completed = checkbox.checked;
+      saveTodosToStorage(todos);
     });
 
     dueDateInput.value = task.dueDate;
     dueDateInput.addEventListener("change", () => {
       task.dueDate = dueDateInput.value;
+      saveTodosToStorage(todos);
     });
 
     notesInput.value = task.notes;
     notesInput.addEventListener("input", () => {
       task.notes = notesInput.value;
+      saveTodosToStorage(todos);
     });
 
     const deleteBtn = li.querySelector(".btn-delete");
@@ -77,6 +84,7 @@ function render(todos, taskList) {
         todos.findIndex((t) => t.id === task.id),
         1,
       );
+      saveTodosToStorage(todos);
       render(todos, taskList);
     });
 
@@ -113,8 +121,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const newState = addTask(text, todos);
       todos.splice(0, todos.length, ...newState); // mutate old state
+      saveTodosToStorage(todos);
       render(todos, taskList);
       taskInput.value = "";
     }
   });
+  render(todos, taskList);
 });
