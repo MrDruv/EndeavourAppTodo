@@ -29,7 +29,7 @@ function render(todos, taskList) {
                 <span>${escapeHTML(task.text)}</span>
                 </label>
             </div>
-            <div class="task-details" style="display: none;">
+            <div class="task-details">
             <div class="task-meta">
               Added on: ${new Date(task.createAt).toLocaleDateString()} <br />
               <label>Due-Date</label>
@@ -40,14 +40,32 @@ function render(todos, taskList) {
             <button class="btn-delete" data-id="${task.id}">Delete</button>
             </div>
         `;
+    const taskHeader = li.querySelector(".task-header");
+    const details = li.querySelector(".task-details");
+    const checkbox = li.querySelector('input[type="checkbox"]');
+    const dueDateInput = li.querySelector(".due-date");
+    const notesInput = li.querySelector(".notesInput");
 
-    li.addEventListener("click", () => {
-      const details = li.querySelector(".task-details");
-      details.style.display = "block";
+    taskHeader.addEventListener("click", () => {
+      details.classList.add("show");
     });
-    li.addEventListener("dblclick", () => {
-      const details = li.querySelector(".task-details");
-      details.style.display = "none";
+    taskHeader.addEventListener("dblclick", () => {
+      details.classList.remove("show");
+    });
+
+    checkbox.checked = task.completed;
+    checkbox.addEventListener("change", () => {
+      task.completed = checkbox.checked;
+    });
+
+    dueDateInput.value = task.dueDate;
+    dueDateInput.addEventListener("change", () => {
+      task.dueDate = dueDateInput.value;
+    });
+
+    notesInput.value = task.notes;
+    notesInput.addEventListener("input", () => {
+      task.notes = notesInput.value;
     });
 
     const deleteBtn = li.querySelector(".btn-delete");
@@ -80,6 +98,9 @@ function addTask(text, state) {
     id: state.length + 1,
     text,
     createAt: new Date().toISOString(),
+    completed: false,
+    dueDate: "",
+    notes: "",
   };
   return [...state, newTask];
 }
