@@ -1,11 +1,20 @@
 const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
 
-// stores todos here
-const todos = JSON.parse(localStorage.getItem("todos")) || [];
+const API_URL = "http://localhost:3000/todos";
 
-function saveTodosToStorage(state) {
-  localStorage.setItem("todos", JSON.stringify(state));
+let todos = []; // Will fetch from backend
+
+async function fetchTodosFromServer() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error("Failed to fetch todos");
+    todos = await res.json();
+    render(todos, taskList);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to load todos from server");
+  }
 }
 
 function escapeHTML(str) {
@@ -58,34 +67,73 @@ function render(todos, taskList) {
     });
 
     checkbox.checked = task.completed;
-    checkbox.addEventListener("change", () => {
+    checkbox.addEventListener("change", async () => {
       task.completed = checkbox.checked;
-      saveTodosToStorage(todos);
+      try {
+        const res = await fetch(`${API_URL}/${task.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(task),
+        });
+        if (!res.ok) throw new Error("Failed to update todo");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update task on server");
+      }
     });
 
     dueDateInput.value = task.dueDate;
-    dueDateInput.addEventListener("change", () => {
+    dueDateInput.addEventListener("change", async () => {
       task.dueDate = dueDateInput.value;
-      saveTodosToStorage(todos);
+      try {
+        const res = await fetch(`${API_URL}/${task.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(task),
+        });
+        if (!res.ok) throw new Error("Failed to update todo");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update task on server");
+      }
     });
 
     notesInput.value = task.notes;
-    notesInput.addEventListener("input", () => {
+    notesInput.addEventListener("input", async () => {
       task.notes = notesInput.value;
-      saveTodosToStorage(todos);
+      try {
+        const res = await fetch(`${API_URL}/${task.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(task),
+        });
+        if (!res.ok) throw new Error("Failed to update todo");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update task on server");
+      }
     });
 
     const deleteBtn = li.querySelector(".btn-delete");
-    deleteBtn.addEventListener("click", (e) => {
+    deleteBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const confirmed = confirm("Are you sure,want to delete?");
       if (!confirmed) return;
-      todos.splice(
-        todos.findIndex((t) => t.id === task.id),
-        1,
-      );
-      saveTodosToStorage(todos);
-      render(todos, taskList);
+      try {
+        const res = await fetch(`${API_URL}/${task.id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok && res.status !== 204)
+          throw new Error("Failed to delete todo");
+        todos.splice(
+          todos.findIndex((t) => t.id === task.id),
+          1,
+        );
+        render(todos, taskList);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to delete task on server");
+      }
     });
 
     taskList.appendChild(li);
@@ -101,30 +149,40 @@ function extractInputText(input) {
   return text;
 }
 
-function addTask(text, state) {
+async function addTask(text) {
   const newTask = {
-    id: state.length + 1,
+    id: Date.now(),
     text,
     createAt: new Date().toISOString(),
     completed: false,
     dueDate: "",
     notes: "",
   };
-  return [...state, newTask];
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newTask),
+    });
+    if (!res.ok) throw new Error("Failed to add todo");
+    const savedTask = await res.json();
+    todos.push(savedTask);
+    render(todos, taskList);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to add task to server");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  fetchTodosFromServer();
+
   taskInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       const text = extractInputText(taskInput);
       if (!text) return;
-
-      const newState = addTask(text, todos);
-      todos.splice(0, todos.length, ...newState); // mutate old state
-      saveTodosToStorage(todos);
-      render(todos, taskList);
+      addTask(text);
       taskInput.value = "";
     }
   });
-  render(todos, taskList);
 });
