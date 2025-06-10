@@ -1,7 +1,7 @@
 const taskInput = document.getElementById("taskInput");
 const taskList = document.getElementById("taskList");
 
-const API_URL = "http://localhost:3000/todos";
+const API_URL = "http://localhost:5000/todos";
 
 let todos = []; // Will fetch from backend
 
