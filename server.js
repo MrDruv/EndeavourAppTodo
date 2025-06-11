@@ -1,68 +1,107 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+const http = require("http");
+const url = require("url");
 
-const file = path.join(__dirname, 'todos.json');
-const PORT = process.env.PORT || 5000;
-
-function readTodos() {
-  const data = fs.readFileSync(file, 'utf-8');
-  return JSON.parse(data);
-}
-
-function writeTodos(todos) {
-  fs.writeFileSync(file, JSON.stringify(todos, null, 2));
-}
+const todos = [];
 
 const server = http.createServer((req, res) => {
-  const [_, base, id] = req.url.split('/');
-  
-  if (base === 'todos') {
-    if (req.method === 'GET' && !id) {
-      const todos = readTodos();
-      return res.writeHead(200, {'Content-Type':'application/json'}).end(JSON.stringify(todos));
-    }
+  const parsedUrl = url.parse(req.url, true);
+  const path = parsedUrl.pathname;
 
-    if (req.method === 'POST' && !id) {
-      let body = '';
-      req.on('data', chunk => (body += chunk));
-      req.on('end', () => {
-        const todos = readTodos();
-        const newTodo = { id: Date.now().toString(), title: JSON.parse(body).title, completed: false };
-        todos.push(newTodo);
-        writeTodos(todos);
-        res.writeHead(201, {'Content-Type':'application/json'}).end(JSON.stringify(newTodo));
-      });
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // For simplicity, allow all origins
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    res.statusCode = 200;
+    res.end();
+    return;
+  }
+
+  if (path === "/todos") {
+    switch (req.method) {
+      case "GET":
+        res.statusCode = 200;
+        res.end(JSON.stringify(todos));
+        break;
+
+      case "POST":
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+        req.on("end", () => {
+          try {
+            const newTodo = JSON.parse(body);
+            todos.push(newTodo);
+            res.statusCode = 201;
+            res.end(JSON.stringify(newTodo));
+          } catch (error) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Invalid JSON" }));
+          }
+        });
+        break;
+
+      default:
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    }
+  } else if (path.startsWith("/todos/")) {
+    const id = parseInt(path.split("/")[2]);
+
+    if (isNaN(id)) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ error: "Invalid Todo ID" }));
       return;
     }
 
-    if (id) {
-      const todos = readTodos();
-      const idx = todos.findIndex(t => t.id === id);
-      if (idx === -1) return res.writeHead(404).end('Not found');
+    const todoIndex = todos.findIndex((todo) => todo.id === id);
 
-      if (req.method === 'PUT') {
-        let body = '';
-        req.on('data', c => (body += c));
-        req.on('end', () => {
-          const { completed, title } = JSON.parse(body);
-          todos[idx] = { ...todos[idx], completed: completed ?? todos[idx].completed, title: title ?? todos[idx].title };
-          writeTodos(todos);
-          res.writeHead(200, {'Content-Type':'application/json'}).end(JSON.stringify(todos[idx]));
-        });
-        return;
-      }
-
-      if (req.method === 'DELETE') {
-        todos.splice(idx, 1);
-        writeTodos(todos);
-        return res.writeHead(204).end();
-      }
+    if (todoIndex === -1) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: "Todo Not Found" }));
+      return;
     }
+
+    switch (req.method) {
+      case "PUT":
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+        req.on("end", () => {
+          try {
+            const updatedTodo = JSON.parse(body);
+            todos[todoIndex] = { ...todos[todoIndex], ...updatedTodo };
+            res.statusCode = 200;
+            res.end(JSON.stringify(todos[todoIndex]));
+          } catch (error) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: "Invalid JSON" }));
+          }
+        });
+        break;
+      case "DELETE":
+        todos.splice(todoIndex, 1);
+        res.statusCode = 204;
+        res.end();
+        break;
+      case "GET":
+        res.statusCode = 200;
+        res.end(JSON.stringify(todos[todoIndex]));
+        break;
+      default:
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: "Method Not Allowed" }));
+    }
+  } else {
+    res.statusCode = 404;
+    res.end(JSON.stringify({ error: "Not Found" }));
   }
-  
-  // If none match:
-  res.writeHead(404, {'Content-Type':'application/json'}).end(JSON.stringify({ error: 'Not found' }));
 });
 
-server.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+const PORT = 5000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
